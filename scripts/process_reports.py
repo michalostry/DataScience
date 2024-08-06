@@ -24,7 +24,9 @@ else:
             tokenizer = tagger.newTokenizer()
             tokenizer.setText(sentence)
 
-            while tokenizer.nextSentence(forms):
+            token_ranges = morphodita.TokenRanges()  # Create a TokenRanges object
+
+            while tokenizer.nextSentence(forms, token_ranges):  # Pass both arguments
                 tagged_lemmas = morphodita.TaggedLemmas()
                 tagger.tag(forms, tagged_lemmas)
 
