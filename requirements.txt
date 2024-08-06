@@ -1,0 +1,4 @@
+requests
+pandas
+pymupdf #fitz
+ufal-morphodita
