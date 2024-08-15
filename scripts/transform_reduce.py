@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Setting to specify how many processed files to load
-process_limit = 5000  # Set to None to process all files, or set a specific number
+process_limit = None  # Set to None to process all files, or set a specific number
+processing_number = 0
 
 # Paths to directories
 processed_dir = '../data/processed/'
@@ -23,6 +24,8 @@ if process_limit is not None:
     file_list = file_list[:process_limit]
 
 for idx, filename in enumerate(file_list):
+    processing_number = processing_number + 1
+    print(processing_number,"/",process_limit, f'| Processing {filename}')
     if filename.endswith(".txt"):
         # Assuming the filename format is: REDIZO_year_schoolname_inspection_report.txt
         file_parts = filename.split('_')
@@ -37,21 +40,25 @@ for idx, filename in enumerate(file_list):
 
 metadata_df = pd.DataFrame(metadata)
 
+print("Step 2: TF-IDF Transformation")
 # Step 2: TF-IDF Transformation (Converting text to numerical features)
 vectorizer = TfidfVectorizer(max_df=0.85, min_df=2)
 X = vectorizer.fit_transform(documents)
 
+print("Save the TF-IDF matrix before PCA")
 # Save the TF-IDF matrix before PCA
 tfidf_df = pd.DataFrame(X.toarray(), columns=vectorizer.get_feature_names_out())
 tfidf_df = pd.concat([metadata_df, tfidf_df], axis=1)
-tfidf_df.to_csv(os.path.join(processed_finished, 'tfidf_features.csv'), index=False)
+#tfidf_df.to_csv(os.path.join(processed_finished, 'tfidf_features.csv'), index=False)
 
 # Step 3: Dimensionality Reduction using PCA
 # Calculate the maximum number of components that can be used for PCA
 max_components = min(X.shape[0], X.shape[1])
+max_components = 250
 
+#max also to 50
 # Adjust PCA to use this value
-pca = PCA(n_components=min(50, max_components))
+pca = PCA(n_components=min(200, max_components))
 X_reduced = pca.fit_transform(X.toarray())
 
 # Adjust the column names to match the number of components

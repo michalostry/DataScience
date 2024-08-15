@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 # Load the CSV data
 data_path = 'C:/++4630/++ University, education/03 -- Tilburg_v02/Data Science/data/1_index_minimalist.csv'
@@ -7,46 +8,60 @@ data = pd.read_csv(data_path)
 # Rename 'red_izo' to 'redizo' to match the processed features dataset
 data = data.rename(columns={'red_izo': 'redizo'})
 
-# Filter out special schools (spec != 1) and rows where nschool != 0
+# Filter out special schools (spec != 1) and rows where nschool != 0 >> to get rid of values for neighboring schools
 filtered_data = data[(data['spec'] != 1) & (data['nschool'] == 0)]
 
+# Filter data based on certainty where upper - lower < 0.2
+filtered_certain_data = filtered_data[(filtered_data['bound'] == 'upper') &
+                                      (filtered_data['value'] - filtered_data['value'] < 0.2)]
 
 # Convert 'redizo' to string for consistency
-filtered_data['redizo'] = filtered_data['redizo'].astype(str)
+filtered_certain_data['redizo'] = filtered_certain_data['redizo'].astype(str)
 
 # Load the processed PCA features
 processed_pca_features_path = 'C:/++4630/++ University, education/03 -- Tilburg_v02/Data Science/data/processed_features.csv'
 processed_pca_features = pd.read_csv(processed_pca_features_path)
-# Load the processed TF-IDF features (full dimensions)
-#processed_tfidf_features_path = 'C:/++4630/++ University, education/03 -- Tilburg_v02/Data Science/data/tfidf_features.csv'
-#processed_tfidf_features = pd.read_csv(processed_tfidf_features_path)
-
 
 # Convert 'redizo' to string for consistency
 processed_pca_features['redizo'] = processed_pca_features['redizo'].astype(str)
-#processed_tfidf_features['redizo'] = processed_tfidf_features['redizo'].astype(str)
-# Merge the index values onto the processed PCA features using 'redizo' as the key
-merged_pca_data = pd.merge(processed_pca_features, filtered_data, on='redizo', how='right')
-#merged_tfidf_data = pd.merge(processed_tfidf_features, filtered_data, on='redizo', how='right')
 
-# Filter out rows with missing 'value' column to ensure data completeness
-merged_pca_data = merged_pca_data.dropna(subset=['value'])
-merged_pca_data = merged_pca_data.dropna(subset=['PC1'])
-#merged_tfidf_data = merged_tfidf_data.dropna(subset=['value'])
+# Calculate the distance in years and match the closest report
+def closest_report(row, reports):
+    school_reports = reports[reports['redizo'] == row['redizo']]
+    if not school_reports.empty:
+        school_reports['year_difference'] = abs(school_reports['year'] - row['year'])
+        closest_report = school_reports.loc[school_reports['year_difference'].idxmin()]
+        return pd.Series([closest_report['year'], closest_report['year_difference']] + closest_report.iloc[2:].tolist())
+    return pd.Series([np.nan, np.nan] + [np.nan] * (len(reports.columns) - 2))
+
+# Apply the closest_report function
+report_values = filtered_certain_data.apply(closest_report, axis=1, reports=processed_pca_features)
+
+# Add the new columns to the filtered_certain_data DataFrame
+filtered_certain_data = pd.concat([filtered_certain_data, report_values], axis=1)
+
+# Filter out rows with missing 'value' or 'matched_year' to ensure data completeness
+filtered_certain_data = filtered_certain_data.dropna(subset=['value', 'year'])
+# Rename the columns
+filtered_certain_data.rename(columns={
+    filtered_certain_data.columns[6]: 'inspection_year',
+    filtered_certain_data.columns[7]: 'inspection_value_distance',
+    **{filtered_certain_data.columns[i]: f'PC{i-7}' for i in range(8, 58)}
+}, inplace=True)
+filtered_certain_data.drop(columns=[filtered_certain_data.columns[59]], inplace=True)
+
+filtered_certain_data = filtered_certain_data.dropna(subset=['PC1'])
 
 # Check the resulting complete dataset
 print("Complete PCA Data Sample:")
-print(merged_pca_data.head())
-#print("Complete TFIDF Data Sample:")
-#print(merged_tfidf_data.head())
+print(filtered_certain_data.head())
 
 # Optionally, save the data for further analysis
-merged_pca_data.to_csv('C:/++4630/++ University, education/03 -- Tilburg_v02/Data Science/data/complete_merged_data.csv', index=False)
-#merged_tfidf_data.to_csv('C:/++4630/++ University, education/03 -- Tilburg_v02/Data Science/data/complete_merged_data.csv', index=False)
+filtered_certain_data.to_csv('C:/++4630/++ University, education/03 -- Tilburg_v02/Data Science/data/complete_merged_data_with_distance.csv', index=False)
 
-print("Data merging and filtering complete.")
-
-
+print("Data merging, filtering, and distance calculation complete.")
+#
+#
 # #######################################
 # ######################################
 # ### ANALYSIS ####
