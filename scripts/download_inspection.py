@@ -15,7 +15,7 @@ max_retries = 1
 retry_delay = 1  # seconds
 
 # Set the limit for the number of reports to process
-report_limit = 15000
+report_limit = 100
 
 # Get the current working directory
 current_directory = os.getcwd()

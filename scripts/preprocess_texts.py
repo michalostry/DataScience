@@ -2,7 +2,7 @@ import os
 import ufal.morphodita as morphodita
 
 # Setting to specify how many reports to process
-report_limit = 20000  # You can change this value to process more or fewer reports
+report_limit = 100  # You can change this value to process more or fewer reports
 
 # Paths to directories
 text_files_dir = '../data/csi_reports/'

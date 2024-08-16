@@ -5,6 +5,12 @@ from keras.layers import Dense
 from keras.optimizers import Adam
 from sklearn.preprocessing import StandardScaler
 
+import sys
+import os
+os.environ["PYTHONIOENCODING"] = "utf-8"
+sys.stdout.reconfigure(encoding='utf-8')
+
+
 # Step 1: Load the data
 data_path_significant = 'C:/++4630/++ University, education/03 -- Tilburg_v02/Data Science/data/complete_certain_merged_data_with_distance.csv'
 data_path_all = 'C:/++4630/++ University, education/03 -- Tilburg_v02/Data Science/data/complete_all_merged_data_with_distance.csv'
@@ -12,7 +18,7 @@ data_path_all = 'C:/++4630/++ University, education/03 -- Tilburg_v02/Data Scien
 data_all = pd.read_csv(data_path_all)
 data_significant = pd.read_csv(data_path_significant)
 
-data_for_filter = data_all #which data to use
+data_for_filter = data_significant #which data to use
 
 # Remove duplicate years x inspection year combinations from the data
 data_unique = data_for_filter.loc[data_for_filter.groupby(['redizo', 'inspection_year'])['inspection_value_distance'].idxmin()]
@@ -20,10 +26,10 @@ data_unique = data_for_filter.loc[data_for_filter.groupby(['redizo', 'inspection
 # Keep only the row with the lowest 'inspection_value_distance' for each 'redizo'
 data_filtered = data_unique.loc[data_unique.groupby('redizo')['inspection_value_distance'].idxmin()]
 
-#Display rows where the same 'redizo' appears more than once
-multiple_reports = data_unique.groupby('redizo').filter(lambda x: len(x) > 1)
-print("Rows with the same redizo (multiple inspection reports matched):")
-print(multiple_reports.head(10))  # Adjust the number to see more rows if needed
+##Display rows where the same 'redizo' appears more than once
+#multiple_reports = data_unique.groupby('redizo').filter(lambda x: len(x) > 1)
+#print("Rows with the same redizo (multiple inspection reports matched):")
+#print(multiple_reports.head(10))  # Adjust the number to see more rows if needed
 
 data = data_filtered #data to use for the model
 
@@ -52,7 +58,7 @@ model.add(Dense(1, activation='sigmoid'))  # Output layer for regression
 model.compile(optimizer=Adam(learning_rate=0.001), loss='mean_squared_error')
 
 # Step 5: Train the model
-history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=100, batch_size=32)
+history = model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=300, batch_size=32)
 
 # Step 6: Evaluate the model
 loss = model.evaluate(X_test, y_test)
@@ -67,6 +73,7 @@ plt.title('Learning Curves')
 plt.xlabel('Epochs')
 plt.ylabel('Mean Squared Error')
 plt.legend()
+plt.savefig('plots/Learning Curves.png')  # Save the plot as a file
 plt.show()
 
 # Step 8: Make predictions and compare
@@ -79,7 +86,9 @@ plt.plot([y.min(), y.max()], [y.min(), y.max()], 'r--')
 plt.xlabel('True Value')
 plt.ylabel('Predicted Value')
 plt.title('True vs Predicted Values (Neural Network: 64-32-16)')
+plt.savefig('plots/True vs Predicted Values.png')
 plt.show()
+
 
 # Step 9: Residual Analysis
 residuals = y_test - y_pred.flatten()
@@ -90,14 +99,9 @@ plt.hist(residuals, bins=30, edgecolor='k', alpha=0.7)
 plt.title('Histogram of Residuals')
 plt.xlabel('Residual')
 plt.ylabel('Frequency')
+plt.savefig('plots/Histogram of Residuals')
 plt.show()
+
 
 # Save the model in a subdirectory of the current working directory
 model.save('my_model.keras')
-
-
-
-# Ok, what to do tomorrow
-# then lets run this model on the dataset, which also immediatelly allowes for comparison with their prediction
-#
-# and then let's wrup up'

@@ -3,7 +3,6 @@ import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
-import seaborn as sns
 from scipy import sparse
 
 # Setting to specify how many processed files to load
@@ -46,6 +45,7 @@ print("Vocabulary established.")
 tfidf_chunks = []
 metadata_chunks = []
 
+# processing in chunks, because of memory issues
 for i in range(0, len(file_list), chunk_size):
     chunk_files = file_list[i:i + chunk_size]
     chunk_documents = []
@@ -107,18 +107,18 @@ feature_df.to_csv(os.path.join(processed_finished, 'processed_features.csv'), in
 
 print("Feature extraction and dimensionality reduction complete.")
 
-# Step 5: Visualize the explained variance by each component
-explained_variance = pca.explained_variance_ratio_
-print(f"Explained variance by each component: {explained_variance}")
-print(f"Cumulative explained variance: {explained_variance.cumsum()}")
+# # Step 5: Visualize the explained variance by each component
+# explained_variance = pca.explained_variance_ratio_
+# print(f"Explained variance by each component: {explained_variance}")
+# print(f"Cumulative explained variance: {explained_variance.cumsum()}")
 
-# Step 5a: Scree Plot (Visualizing the explained variance by each component)
-plt.figure(figsize=(8, 6))
-plt.plot(range(1, len(explained_variance) + 1), explained_variance, marker='o', linestyle='--')
-plt.title('Scree Plot')
-plt.xlabel('Principal Component')
-plt.ylabel('Explained Variance')
-plt.show()
+# # Step 5a: Scree Plot (Visualizing the explained variance by each component)
+# plt.figure(figsize=(8, 6))
+# plt.plot(range(1, len(explained_variance) + 1), explained_variance, marker='o', linestyle='--')
+# plt.title('Scree Plot')
+# plt.xlabel('Principal Component')
+# plt.ylabel('Explained Variance')
+# plt.show()
 
 # Step 5b: Cumulative Explained Variance Plot
 cumulative_variance = explained_variance.cumsum()
@@ -128,21 +128,22 @@ plt.plot(range(1, len(cumulative_variance) + 1), cumulative_variance, marker='o'
 plt.title('Cumulative Explained Variance')
 plt.xlabel('Number of Principal Components')
 plt.ylabel('Cumulative Explained Variance')
+plt.savefig('plots/Cumulative Explained Variance.png')
 plt.show()
 
-# Step 5c: 2D PCA Scatter Plot (Visualizing the data in the space of the first two principal components)
-plt.figure(figsize=(8, 6))
-plt.scatter(X_reduced[:, 0], X_reduced[:, 1], c='blue', edgecolor='k', s=50)
-plt.title('2D PCA Scatter Plot')
-plt.xlabel('Principal Component 1')
-plt.ylabel('Principal Component 2')
-plt.grid(True)
-plt.show()
+# # Step 5c: 2D PCA Scatter Plot (Visualizing the data in the space of the first two principal components)
+# plt.figure(figsize=(8, 6))
+# plt.scatter(X_reduced[:, 0], X_reduced[:, 1], c='blue', edgecolor='k', s=50)
+# plt.title('2D PCA Scatter Plot')
+# plt.xlabel('Principal Component 1')
+# plt.ylabel('Principal Component 2')
+# plt.grid(True)
+# plt.show()
 
-# Step 5d: Pairplot of the first few principal components
-pca_df = pd.DataFrame(X_reduced[:, :5], columns=[f'PC{i}' for i in range(1, 6)])
-sns.pairplot(pca_df)
-plt.suptitle('Pairplot of First 5 Principal Components')
-plt.show()
-
-print("Data transformation and visualization complete.")
+# # Step 5d: Pairplot of the first few principal components
+# pca_df = pd.DataFrame(X_reduced[:, :5], columns=[f'PC{i}' for i in range(1, 6)])
+# sns.pairplot(pca_df)
+# plt.suptitle('Pairplot of First 5 Principal Components')
+# plt.show()
+#
+# print("Data transformation and visualization complete.")
